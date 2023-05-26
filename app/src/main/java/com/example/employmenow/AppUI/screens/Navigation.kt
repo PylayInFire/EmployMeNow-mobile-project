@@ -9,14 +9,15 @@ import androidx.navigation.compose.rememberNavController
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
+    val sharedVM: SharedGoogleViewModel = viewModel()
     NavHost(navController = navController,
             startDestination = Screen.SplashScreen.route) {
 
-        composable(Screen.SplashScreen.route) { SplashScreen(navController = navController) }
+        composable(Screen.SplashScreen.route) { SplashScreen(navController = navController, sharedVM) }
 
-        composable(Screen.SignUpScreen.route) { SignUpScreen(navController = navController) }
+        composable(Screen.SignUpScreen.route) { SignUpScreen(navController = navController, sharedVM) }
 
-        composable(Screen.MainScreen.route) { MainScreen(navController = navController) }
+        composable(Screen.MainScreen.route) { MainScreen(navController = navController, sharedVM) }
 
         composable(Screen.ResponsesScreen.route) { NotificationScreen(navController = navController) }
 

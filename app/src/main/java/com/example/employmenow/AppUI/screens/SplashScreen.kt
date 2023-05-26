@@ -10,24 +10,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.modifier.modifierLocalProvider
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.SemanticsProperties.Text
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.employmenow.R
+import com.example.employmenow.VM.SharedGoogleViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import kotlinx.coroutines.delay
 
 
 @Composable
-fun SplashScreen(navController: NavController) {
+fun SplashScreen(navController: NavController, googleViewModel: SharedGoogleViewModel) {
     var LoadPercent by remember { mutableStateOf(0f) };
     val screenWith = LocalConfiguration.current.screenWidthDp.dp
+    val context = LocalContext.current
 
     LaunchedEffect(LoadPercent) {
         while (LoadPercent < 1f) {
@@ -36,12 +36,23 @@ fun SplashScreen(navController: NavController) {
         }
 
         if (LoadPercent >= 1f) {
-            navController.navigate(
-                route = Screen.SignUpScreen.route,
-                builder = {
-                    navController.popBackStack(Screen.SplashScreen.route, inclusive = true)
-                }
-            )
+            val account = GoogleSignIn.getLastSignedInAccount(context) // сохраненные данные об аккаунте в виде объекта
+            if(account == null) {
+                navController.navigate(
+                    route = Screen.SignUpScreen.route,
+                    builder = {
+                        navController.popBackStack(Screen.SplashScreen.route, inclusive = true)
+                    }
+                )
+            } else {
+                googleViewModel.setGoogleAccount(account)
+                navController.navigate(
+                    route = Screen.MainScreen.route,
+                    builder = {
+                        navController.popBackStack(Screen.SplashScreen.route, inclusive = true)
+                    }
+                )
+            }
         }
     }
 

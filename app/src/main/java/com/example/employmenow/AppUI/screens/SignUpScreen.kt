@@ -1,6 +1,12 @@
 package com.example.employmenow.AppUI.screens
 
-import android.view.MotionEvent
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -10,29 +16,27 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.employmenow.R
+import com.example.employmenow.VM.AuthViewModel
+import com.example.employmenow.VM.Status.LoadingStatus
 import com.example.employmenow.ui.theme.EmployMeNowTheme
 import com.google.accompanist.pager.*
-
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import androidx.lifecycle.*
+import com.example.employmenow.VM.SharedGoogleViewModel
 
 
 @Preview
@@ -57,7 +61,8 @@ fun HorizontPagerIndicator(
 }
 @OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class)
 @Composable
-fun SignUpScreen(navController: NavController) {
+fun SignUpScreen(navController: NavController, sharedGoogleViewModel: SharedGoogleViewModel) {
+    val authVM: AuthViewModel = viewModel()
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val pages = listOf(
         Pages.First,
@@ -98,7 +103,7 @@ fun SignUpScreen(navController: NavController) {
             }
             CustomHorizontalPagerIndicator(pagerState = pagerState)
             Spacer(modifier = Modifier.padding(top = screenHeight * 0.08f))
-            GoogleButton(navController)
+            GoogleButton(navController, authVM, sharedGoogleViewModel)
         }
     }
 }
@@ -146,43 +151,81 @@ fun Pagers(Pages: Pages) {
             Spacer(modifier = Modifier.padding(top = screenHeight * 0.07f))
         }
 }
+
+fun openGoogleIntent(launcher: ActivityResultLauncher<Intent>, context: Context, navController: NavController) {
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestEmail()
+        .build()
+    val client = GoogleSignIn.getClient(context, gso)
+    val account = GoogleSignIn.getLastSignedInAccount(context)
+    if (account != null) {
+        navController.navigate(Screen.MainScreen.route) {
+            popUpTo(Screen.SplashScreen.route) { inclusive = true }
+            launchSingleTop = true
+        }
+    } else {
+        launcher.launch(client.signInIntent)
+    }
+}
+
+
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalPagerApi::class)
 @Composable
-fun GoogleButton(navController: NavController) {
-    var isButtonPressed by remember { mutableStateOf(false) }
-    Button(
-        modifier = Modifier
-            .size(width = 393.dp, height = 45.dp)
-            .padding(start = 10.dp, end = 10.dp)
-            .border(
-                1.dp, Color(0xFF8F8F8F),
-                shape = RoundedCornerShape(10.dp)
-            ),
-        onClick = {
-            navController.navigate(
-                route = Screen.MainScreen.route,
-                builder = {
-                    navController.popBackStack(Screen.SplashScreen.route, inclusive = true)
-                }
-            )
-        },
-        colors =  ButtonDefaults.buttonColors(Color(0xFF1E1E1E))
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Image(painter = painterResource(id = R.drawable.icons8_google), contentDescription = "")
-            Text(
-                text = "Sign-up with Google",
-                fontWeight = FontWeight.W600,
-                fontSize = 20.sp,
-                lineHeight = 16.sp,
-                letterSpacing = 0.4.sp,
-                color = Color(0xFFFFFFFF))
+fun GoogleButton(navController: NavController, authVM: AuthViewModel, googleVM: SharedGoogleViewModel) {
+    val context = LocalContext.current
+    val loadingStatus: LoadingStatus? by authVM.loadingStatus.observeAsState()
+    val account = authVM.googleAccount.observeAsState()
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {activityResult ->
+        Log.d("TAG", activityResult.resultCode.toString())
+        if(activityResult.resultCode == Activity.RESULT_OK) {
+            val data = activityResult.data //передаём инфу о входе
+            if (data != null) {
+                authVM.performSignUp(data)
+            }
         }
-
     }
+    when(loadingStatus) {
+        is LoadingStatus.Loading -> { CircularProgressIndicator() }
+        is LoadingStatus.Success -> {
 
+            navController.navigate(Screen.MainScreen.route) {
+                account.value?.let { googleVM.setGoogleAccount(it) }
+                popUpTo(Screen.SplashScreen.route) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+        is LoadingStatus.Error -> {
+            Text(text = "Error")
+        }
+        else -> {
+            Button(
+                modifier = Modifier
+                    .size(width = 393.dp, height = 45.dp)
+                    .padding(start = 10.dp, end = 10.dp)
+                    .border(
+                        1.dp, Color(0xFF8F8F8F),
+                        shape = RoundedCornerShape(10.dp)
+                    ),
+                onClick = {
+                    openGoogleIntent(launcher, context, navController)
+                },
+                colors =  ButtonDefaults.buttonColors(Color(0xFF1E1E1E))
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Image(painter = painterResource(id = R.drawable.icons8_google), contentDescription = "")
+                    Text(
+                        text = "Sign-up with Google",
+                        fontWeight = FontWeight.W600,
+                        fontSize = 20.sp,
+                        lineHeight = 16.sp,
+                        letterSpacing = 0.4.sp,
+                        color = Color(0xFFFFFFFF))
+                }
 
+            }
+        }
+    }
 }
