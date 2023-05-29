@@ -5,18 +5,26 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.employmenow.AppUI.components.*
+import com.example.employmenow.Models.JobModel
 import com.example.employmenow.Models.WorkModel
+import com.example.employmenow.VM.AuthViewModel
+import com.example.employmenow.VM.JobViewModel
+import com.example.employmenow.VM.Status.LoadingStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -27,24 +35,12 @@ fun MainScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
 
     var searchState = remember { mutableStateOf(false) }
-    val data = listOf(
-        WorkModel("HR Specialist", "Need an HR Specialist? " +
-                "Our team provides tailored HR solutions...", true),
-        WorkModel("Manager", "Need an HR Specialist? " +
-                "Our team provides tailored HR solutions...", false),
-        WorkModel("Cleaner", "Need an HR Specialist? " +
-                "Our team provides tailored HR solutions...", true),
-        WorkModel("Manager", "Need an HR Specialist? " +
-                "Our team provides tailored HR solutions...", false),
-        WorkModel("Manager", "Need an HR Specialist? " +
-                "Our team provides tailored HR solutions...", false),
-        WorkModel("Manager", "Need an HR Specialist? " +
-                "Our team provides tailored HR solutions...", false),
-        WorkModel("Manager", "Need an HR Specialist? " +
-                "Our team provides tailored HR solutions...", false),
-        WorkModel("Manager", "Need an HR Specialist? " +
-                "Our team provides tailored HR solutions...", false)
-    )
+    val jobVM: JobViewModel = viewModel()
+    jobVM.getJobs() 
+    val jobs by jobVM.jobs.observeAsState()
+    val loadingStatus: LoadingStatus? by jobVM.loadingStatus.observeAsState()
+
+    
 
     ModalDrawer(
         drawerContent = {
@@ -67,20 +63,30 @@ fun MainScreen(navController: NavController) {
                     )
                 }
             ) {
-                LazyColumn(
-                    Modifier
-                        .background(Color(0xFF272727))
-                        .padding(top = 50.dp, bottom = 66.dp)
-                        .fillMaxSize()
-                ) {
-                    item {
-                        /*if (searchState.value) SearchBar(
-                            searchState = searchState,
-                            onSearchStateChanged = { state -> searchState.value = state }
-                        ) else FilteredMenu()*/
+                when(loadingStatus) {
+                    is LoadingStatus.Loading -> {
+                        CircularProgressIndicator()
                     }
-                    itemsIndexed(data) { index, data ->
-                        WorkListItem(item = data)
+                    is LoadingStatus.Error -> {
+                        Text(text = "Error")
+                    }
+                    is LoadingStatus.Success -> {
+                        LazyColumn(
+                            Modifier
+                                .background(Color(0xFF272727))
+                                .padding(top = 50.dp, bottom = 66.dp)
+                                .fillMaxSize()
+                        ) {
+                            item {
+                                if (searchState.value) SearchBar(
+                                    searchState = searchState,
+                                    onSearchStateChanged = { state -> searchState.value = state }
+                                ) else FilteredMenu()
+                            }
+                            items(jobs ?: emptyList()) { job ->
+                                WorkListItem(item = job)
+                            }
+                        }
                     }
                 }
             }
