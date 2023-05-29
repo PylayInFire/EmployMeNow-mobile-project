@@ -15,14 +15,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.employmenow.Models.WorkModel
+import com.example.employmenow.Models.JobModel
 import com.example.employmenow.R
 import androidx.compose.material3.*
 
 
 @Composable
-fun WorkListItem(item: WorkModel) {
-    var isPressed by remember { mutableStateOf(item.isFavorite) }
+fun WorkListItem(item: JobModel) {
+    var isPressed by remember { mutableStateOf(false) }
 
     Row(
         Modifier
@@ -60,7 +60,7 @@ fun WorkListItem(item: WorkModel) {
                 .padding(start = 20.dp)) {
             Text(
                 modifier = Modifier.padding(bottom = 1.dp),
-                text = item.title,
+                text = item.jobName,
                 fontWeight = FontWeight.W400,
                 fontSize = 20.sp,
                 lineHeight = 16.sp,
@@ -88,16 +88,17 @@ fun WorkListItem(item: WorkModel) {
 
 
                 ) {
-                    Text(
-                        text = "#high salary",
-                        fontWeight = FontWeight.W600,
-                        fontSize = 8.sp,
-                        lineHeight = 16.sp,
-                        letterSpacing = 0.4.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center)
+                    item.tags.getOrNull(0)?.let {
+                        Text(
+                            text = it,
+                            fontWeight = FontWeight.W600,
+                            fontSize = 8.sp,
+                            lineHeight = 16.sp,
+                            letterSpacing = 0.4.sp,
+                            color = Color.White,
+                            textAlign = TextAlign.Center)
+                    }
                 }
-
                 Box(
                     Modifier
                         .width(50.dp)
@@ -106,14 +107,16 @@ fun WorkListItem(item: WorkModel) {
                         .align(Alignment.CenterVertically)
 
                 ) {
-                    Text(
-                        text = "#part-time",
-                        fontWeight = FontWeight.W600,
-                        fontSize = 8.sp,
-                        lineHeight = 16.sp,
-                        letterSpacing = 0.4.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center)
+                    item.tags.getOrNull(1)?.let {
+                        Text(
+                            text = it,
+                            fontWeight = FontWeight.W600,
+                            fontSize = 8.sp,
+                            lineHeight = 16.sp,
+                            letterSpacing = 0.4.sp,
+                            color = Color.White,
+                            textAlign = TextAlign.Center)
+                    }
                 }
 
                 Box(
@@ -123,14 +126,16 @@ fun WorkListItem(item: WorkModel) {
                         .fillMaxHeight()
                         .align(Alignment.CenterVertically)
                 ) {
-                    Text(
-                        text = "#perks",
-                        fontWeight = FontWeight.W600,
-                        fontSize = 8.sp,
-                        lineHeight = 16.sp,
-                        letterSpacing = 0.4.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center)
+                    item.tags.getOrNull(2)?.let {
+                        Text(
+                            text = it,
+                            fontWeight = FontWeight.W600,
+                            fontSize = 8.sp,
+                            lineHeight = 16.sp,
+                            letterSpacing = 0.4.sp,
+                            color = Color.White,
+                            textAlign = TextAlign.Center)
+                    }
                 }
             }
         }
@@ -143,7 +148,7 @@ fun WorkListItem(item: WorkModel) {
             Spacer(modifier = Modifier.height(40.dp))
 
             Text(
-                text = "4/5",
+                text = item.company.companyName,
                 fontWeight = FontWeight.W400,
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
