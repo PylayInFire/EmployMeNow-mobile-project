@@ -15,9 +15,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.employmenow.Models.JobModel
+import com.example.employmenow.Models.WorkModel
 import com.example.employmenow.R
 import androidx.compose.material3.*
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.employmenow.Models.JobModel
 
 
 @Composable
@@ -27,7 +29,7 @@ fun WorkListItem(item: JobModel) {
     Row(
         Modifier
             .fillMaxWidth()
-            .height(125.dp)
+            .height(145.dp)
             .drawWithContent {
                 drawLine(
                     color = Color(0xFFE0E0E0),
@@ -56,7 +58,7 @@ fun WorkListItem(item: JobModel) {
         Column(
             Modifier
                 .width(180.dp)
-                .height(110.dp)
+                .height(135.dp)
                 .padding(start = 20.dp)) {
             Text(
                 modifier = Modifier.padding(bottom = 1.dp),
@@ -68,12 +70,13 @@ fun WorkListItem(item: JobModel) {
                 color = Color.White)
             Text(
                 modifier = Modifier.padding(top = 8.dp, bottom = 9.dp),
-                text = item.description,
+                text = if(item.description.length > 40) "${item.description.substring(0, 40)}..." else item.description,
                 fontWeight = FontWeight.W400,
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
                 letterSpacing = 0.4.sp,
                 color = Color.White)
+            Spacer(modifier = Modifier.weight(1f))
             Row(
                 Modifier.size(180.dp, 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -90,15 +93,17 @@ fun WorkListItem(item: JobModel) {
                 ) {
                     item.tags.getOrNull(0)?.let {
                         Text(
-                            text = it,
+                            text = it.tagName,
+                            modifier = Modifier.align(Alignment.Center),
                             fontWeight = FontWeight.W600,
-                            fontSize = 8.sp,
+                            fontSize = 9.sp,
                             lineHeight = 16.sp,
                             letterSpacing = 0.4.sp,
                             color = Color.White,
-                            textAlign = TextAlign.Center)
+                        )
                     }
                 }
+                
                 Box(
                     Modifier
                         .width(50.dp)
@@ -109,13 +114,14 @@ fun WorkListItem(item: JobModel) {
                 ) {
                     item.tags.getOrNull(1)?.let {
                         Text(
-                            text = it,
+                            text = it.tagName,
+                            modifier = Modifier.align(Alignment.Center),
                             fontWeight = FontWeight.W600,
-                            fontSize = 8.sp,
+                            fontSize = 9.sp,
                             lineHeight = 16.sp,
                             letterSpacing = 0.4.sp,
                             color = Color.White,
-                            textAlign = TextAlign.Center)
+                        )
                     }
                 }
 
@@ -128,24 +134,30 @@ fun WorkListItem(item: JobModel) {
                 ) {
                     item.tags.getOrNull(2)?.let {
                         Text(
-                            text = it,
+                            text = it.tagName,
+                            modifier = Modifier.align(Alignment.Center),
                             fontWeight = FontWeight.W600,
-                            fontSize = 8.sp,
+                            fontSize = 9.sp,
                             lineHeight = 16.sp,
                             letterSpacing = 0.4.sp,
                             color = Color.White,
-                            textAlign = TextAlign.Center)
+                        )
                     }
                 }
             }
         }
-        Column(Modifier.padding(start = 50.dp, bottom = 3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            Modifier
+                .padding(start = 50.dp, bottom = 3.dp)
+                .height(135.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             IconButton(onClick = { isPressed = !isPressed },
             content = {
                 if(isPressed) Icon(painter = painterResource(id = R.drawable.star_full), contentDescription = "", tint = Color.Yellow) else Icon(painter = painterResource(id = R.drawable.star), contentDescription = "", tint = Color.Yellow)
             })
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             Text(
                 text = item.company.companyName,

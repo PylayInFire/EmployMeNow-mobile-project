@@ -65,7 +65,13 @@ fun MainScreen(navController: NavController) {
             ) {
                 when(loadingStatus) {
                     is LoadingStatus.Loading -> {
-                        CircularProgressIndicator()
+                       Box(Modifier.fillMaxSize()) {
+                            CircularProgressIndicator(
+                                Modifier
+                                    .size(50.dp)
+                                    .align(Alignment.Center),
+                                color = Color(0xFF3CF283))
+                        }
                     }
                     is LoadingStatus.Error -> {
                         Text(text = "Error")
