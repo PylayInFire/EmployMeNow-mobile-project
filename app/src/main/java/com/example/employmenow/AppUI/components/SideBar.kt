@@ -1,6 +1,5 @@
 package com.example.employmenow.AppUI.components
 
-import android.graphics.drawable.Icon
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,39 +10,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import com.example.employmenow.R
-import androidx.compose.material.ButtonColors
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import kotlinx.coroutines.launch
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 
 @Composable
 fun SideBar(
     sideBarScope: CoroutineScope,
     scaffoldState: ScaffoldState,
-    navUploadCv: () -> Unit
+    navUploadCv: () -> Unit,
+    account: GoogleSignInAccount,
+    exitAccount: () -> Unit
 ) {
     Box(modifier = Modifier
         .width(346.dp)
         .fillMaxHeight()) {
-
+        
         Column(Modifier.fillMaxSize()) {
-            SideBarHeader()
+            SideBarHeader(account = account)
             Box(modifier = Modifier.weight(1f)) {
                 SideBarContent(sideBarScope, scaffoldState, navUploadCv)
             }
-            SideBarFooter()
+            SideBarFooter(exitAccount)
         }
     }
 }
 
-@Preview
+
 @Composable
-fun SideBarHeader() {
+fun SideBarHeader(account: GoogleSignInAccount) {
     Row(
         modifier = Modifier
             .height(112.dp)
@@ -63,7 +62,7 @@ fun SideBarHeader() {
             )
             Text(
                 modifier = Modifier.padding(top = 7.dp),
-                text = "Yevhen Pylaikin",
+                text = "${account.givenName} ${account.familyName}",
                 fontWeight = FontWeight.W600,
                 fontSize = 16.sp,
                 lineHeight = 20.sp,
@@ -123,9 +122,12 @@ fun SideBarContent(sideBarScope: CoroutineScope, scaffoldState: ScaffoldState, n
     }
 }
 
-@Preview
+
 @Composable
-fun SideBarFooter() {
+fun SideBarFooter(
+    exitAccount: () -> Unit
+) {
+
     Row (
         modifier = Modifier
             .height(89.dp)
@@ -134,13 +136,15 @@ fun SideBarFooter() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-
+        
         IconButton(modifier = Modifier.padding(start = 28.dp),onClick = { /*TODO*/ }) {
             Icon(painter = painterResource(id = R.drawable.settings), contentDescription = "fd", tint = Color.White)
         }
-
-        IconButton(modifier = Modifier.padding(end = 36.dp), onClick = { /*TODO*/ }) {
-            Icon(painter = painterResource(id = R.drawable.exit), contentDescription = "dsf", tint = Color.White)
+        
+        IconButton(modifier = Modifier.padding(end = 36.dp), onClick = {
+            exitAccount()
+        }) {
+            Icon(painter = painterResource(id = R.drawable.exit), contentDescription = "exit", tint = Color.White)
         }
     }
 }

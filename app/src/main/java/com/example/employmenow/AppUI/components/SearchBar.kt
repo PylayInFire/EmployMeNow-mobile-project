@@ -1,5 +1,6 @@
 package com.example.employmenow.AppUI.components
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
@@ -18,11 +19,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import com.example.employmenow.AppUI.screens.MainScreen
+import com.example.employmenow.Utils.VoiceRecognition
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBar(searchState: MutableState<Boolean>, onSearchStateChanged: (Boolean) -> Unit) {
     var searchText by remember { mutableStateOf("") }
+    val startVoiceRecognition = rememberLauncherForActivityResult(VoiceRecognition()) { result ->
+        searchText = result
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -56,7 +61,12 @@ fun SearchBar(searchState: MutableState<Boolean>, onSearchStateChanged: (Boolean
             ),
         )
         Spacer(modifier = Modifier.width(20.dp))
-        Icon(modifier = Modifier.size(16.dp, 18.dp), painter = painterResource(id = R.drawable.micro), contentDescription = "voice", tint = Color(0xFF979797))
+        IconButton(onClick = { startVoiceRecognition.launch(0) }) {
+            Icon(modifier = Modifier.size(16.dp, 18.dp),
+                painter = painterResource(id = R.drawable.micro),
+                contentDescription = "voice", tint = Color(0xFF979797)
+            )
+        }
         Spacer(modifier = Modifier.width(25.dp))
         IconButton(onClick = {
             val searchState = !searchState.value
