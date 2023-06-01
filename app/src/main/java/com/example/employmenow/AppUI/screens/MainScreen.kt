@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.employmenow.AppUI.components.*
 import com.example.employmenow.Utils.PermissionUtils
@@ -29,6 +28,7 @@ import kotlinx.coroutines.launch
 
 
 
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewModel, jobViewModel: JobViewModel) {
@@ -37,12 +37,20 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
     val scope = rememberCoroutineScope()
 
     var searchState = remember { mutableStateOf(false) }
-    jobViewModel.getJobs() 
+    jobViewModel.getJobs() // Сервер пока что даёт таймаут
     val jobs by jobViewModel.jobs.observeAsState()
     val savedAccount: GoogleSignInAccount? by googleViewModel.googleAccount.observeAsState()
     val loadingStatus: LoadingStatus? by jobViewModel.loadingStatus.observeAsState()
     val permissionGranted = remember { mutableStateOf(true) }
     val context = LocalContext.current
+
+    val filteredJobsState = remember { mutableStateOf(jobs ?: emptyList()) }
+
+    LaunchedEffect(jobs) {
+        jobs?.let { updatedJobs ->
+            filteredJobsState.value = updatedJobs
+        }
+    }
 
     fun exitAccount() {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -84,7 +92,6 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
             bottomBar = {
                 Footer(
                     searchState = searchState,
-                    onSearchStateChanged = { state -> searchState.value = state },
                     isMainScreen = true,
                     navController = navController
                 )
@@ -114,12 +121,29 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
                             .fillMaxSize()
                     ) {
                         item {
-                            if (searchState.value) SearchBar(
-                                searchState = searchState,
-                                onSearchStateChanged = { state -> searchState.value = state }
-                            ) else FilteredMenu()
+                            if (searchState.value) {
+                                SearchBar(
+                                    searchState = searchState,
+                                    onSearchStateChanged = { state -> searchState.value = state },
+                                    jobs = jobs ?: emptyList(),
+                                    onSearchPerformed = { updatedFilteredJobs ->
+                                        updatedFilteredJobs?.let { filteredJobsList ->
+                                            filteredJobsState.value = filteredJobsList
+                                        }
+                                    }
+                                )
+                            } else {
+                                FilteredMenu(
+                                    jobs = jobs ?: emptyList(),
+                                    onSortedPerformed = { updatedSortedJobs ->
+                                        updatedSortedJobs?.let { sortedJobsList ->
+                                            filteredJobsState.value = sortedJobsList
+                                        }
+                                    }
+                                )
+                            }
                         }
-                        items(jobs ?: emptyList()) { job ->
+                        items(filteredJobsState.value) { job ->
                             WorkListItem(item = job, onWorkClick = {
                                 jobViewModel.getJobById(job.jobId)
                                 navController.navigate(Screen.DescriptionScreen.route)

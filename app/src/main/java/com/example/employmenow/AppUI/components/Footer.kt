@@ -24,7 +24,6 @@ import com.example.employmenow.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Footer(searchState: MutableState<Boolean> = mutableStateOf(false),
-           onSearchStateChanged: (Boolean) -> Unit = {},
            isMainScreen: Boolean = true,
            navController: NavController) {
 

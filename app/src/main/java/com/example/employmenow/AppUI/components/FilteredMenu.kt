@@ -19,18 +19,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.employmenow.Models.JobModel
 import com.example.employmenow.R
 
-@Preview
+
 @Composable
-fun FilteredMenu() {
-    val options = listOf("Rating", "Date", "Reset")
+fun FilteredMenu(jobs: List<JobModel>, onSortedPerformed: (List<JobModel>?) -> Unit) {
+    val options = listOf("A-Z", "Z-A", "Reset")
     var isOpen by remember { mutableStateOf(false); }
+    val onOptionSelected: (String) -> Unit = { option ->
+        when (option) {
+            "A-Z" -> {
+                val jobsAsc = jobs.sortedBy { it.jobName.trim() }
+                onSortedPerformed(jobsAsc)
+            }
+            "Z-A" -> {
+                val jobsDesc = jobs.sortedByDescending { it.jobName.trim() }
+                onSortedPerformed(jobsDesc)
+            }
+            "Reset" -> {
+                onSortedPerformed(jobs)
+            }
+        }
+        isOpen = false
+    }
+
     Row(
         Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .background(Color(0xFF272727))) {
+            .background(Color(0xFF272727))
+    ) {
         Button(
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF272727)),
             onClick = { isOpen = !isOpen },
@@ -57,7 +76,7 @@ fun FilteredMenu() {
             modifier = Modifier.background(Color(0xFF272727))
         ) {
             options.forEachIndexed { index, option ->
-                DropdownMenuItem(onClick = { isOpen = false }) {
+                DropdownMenuItem(onClick = { onOptionSelected(option) }) {
                     Text(
                         text = option,
                         style = TextStyle(
@@ -72,5 +91,4 @@ fun FilteredMenu() {
             }
         }
     }
-
-    }
+}
