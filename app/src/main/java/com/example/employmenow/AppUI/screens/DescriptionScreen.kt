@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -36,37 +34,60 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.employmenow.AppUI.components.Footer
 import com.example.employmenow.AppUI.components.Header
-import com.example.employmenow.Models.JobModel
 import com.example.employmenow.VM.JobViewModel
 import com.example.employmenow.R
+import com.example.employmenow.VM.WorkerViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun DescriptionScreen(
     navController: NavController,
-    jobViewModel: JobViewModel
+    jobViewModel: JobViewModel,
+    workerViewModel: WorkerViewModel
 ) {
     val jobById by jobViewModel.selectedJobById.observeAsState()
-    var feedBackText by remember { mutableStateOf("") }
+    val hasCV by workerViewModel.hasCv.observeAsState()
 
     val scope = rememberCoroutineScope()
-    Scaffold (
-        topBar = { Header(isMainScreen = false, navController = navController, {}) }
-    ) { jobById?.let { it -> MainJobFragment(jobName = it.jobName, jobDescription = jobById!!.description) } }
+    Scaffold(
+        topBar = {
+            Header(
+                isMainScreen = false,
+                navController = navController,
+                {}
+            )
+        }
+    ) {
+        jobById?.let { job ->
+            hasCV?.let { hasCV ->
+                MainJobFragment(
+                    jobName = job.jobName,
+                    jobDescription = job.description,
+                    hasCV = hasCV,
+                    navController =  navController,
+                    workerViewModel = workerViewModel,
+                    jobId = job.jobId,
+                )
+            }
+        }
+    }
 
 }
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun MainJobFragment(
     jobName: String,
-    jobDescription: String
-) {
+    jobDescription: String,
+    hasCV: Boolean,
+    navController: NavController,
+    workerViewModel: WorkerViewModel,
+    jobId: String
+    ) {
     var feedBackText by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
         Box(
@@ -162,7 +183,13 @@ fun MainJobFragment(
                     ),
                 )
                 TextButton(onClick = {
-
+                              if(hasCV) {
+                                  workerViewModel.giveFeedback(jobId, feedBackText)
+                              } else {
+                                  navController.navigate(Screen.UploadCvScreen.route) {
+                                      popUpTo(Screen.MainScreen.route)
+                                  }
+                              }
                 }, modifier = Modifier
                     .padding(bottom = 16.dp, start = 16.dp, end = 16.dp)
                     .fillMaxWidth()

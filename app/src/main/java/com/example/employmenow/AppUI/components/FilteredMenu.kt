@@ -75,7 +75,7 @@ fun FilteredMenu(jobs: List<JobModel>, onSortedPerformed: (List<JobModel>?) -> U
             onDismissRequest = { isOpen = false },
             modifier = Modifier.background(Color(0xFF272727))
         ) {
-            options.forEachIndexed { index, option ->
+            options.forEachIndexed { _, option ->
                 DropdownMenuItem(onClick = { onOptionSelected(option) }) {
                     Text(
                         text = option,

@@ -7,12 +7,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.employmenow.VM.JobViewModel
 import com.example.employmenow.VM.SharedGoogleViewModel
+import com.example.employmenow.VM.WorkerViewModel
 
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
     val sharedVM: SharedGoogleViewModel = viewModel()
     val jobVM: JobViewModel = viewModel()
+    val workersVM: WorkerViewModel = viewModel()
     NavHost(navController = navController,
             startDestination = Screen.SplashScreen.route) {
 
@@ -20,13 +22,15 @@ fun Navigation() {
 
         composable(Screen.SignUpScreen.route) { SignUpScreen(navController = navController, sharedVM) }
 
-        composable(Screen.MainScreen.route) { MainScreen(navController = navController, sharedVM, jobVM) }
+        composable(Screen.MainScreen.route) { MainScreen(navController = navController, sharedVM, jobVM, workersVM) }
 
-        composable(Screen.DescriptionScreen.route) { DescriptionScreen(navController = navController, jobVM) }
+        composable(Screen.DescriptionScreen.route) { DescriptionScreen(navController = navController, jobVM,  workersVM) }
 
         composable(Screen.ResponsesScreen.route) { NotificationScreen(navController = navController) }
 
         composable(Screen.UploadCvScreen.route) { CvUpload(navController = navController)}
+
+        composable(Screen.ProfileScreen.route) { ProfileScreen(navController = navController, workersVM)}
 
 
     }

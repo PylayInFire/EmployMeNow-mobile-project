@@ -21,6 +21,7 @@ import com.example.employmenow.Utils.PermissionUtils
 import com.example.employmenow.VM.JobViewModel
 import com.example.employmenow.VM.SharedGoogleViewModel
 import com.example.employmenow.VM.Status.LoadingStatus
+import com.example.employmenow.VM.WorkerViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -31,7 +32,7 @@ import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewModel, jobViewModel: JobViewModel) {
+fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewModel, jobViewModel: JobViewModel, workerViewModel: WorkerViewModel) {
 
     val scaffoldState = rememberScaffoldState(rememberDrawerState(DrawerValue.Closed))
     val scope = rememberCoroutineScope()
@@ -41,10 +42,29 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
     val jobs by jobViewModel.jobs.observeAsState()
     val savedAccount: GoogleSignInAccount? by googleViewModel.googleAccount.observeAsState()
     val loadingStatus: LoadingStatus? by jobViewModel.loadingStatus.observeAsState()
+    val isBanned by workerViewModel.isBanned.observeAsState()
     val permissionGranted = remember { mutableStateOf(true) }
     val context = LocalContext.current
+    val ban = remember {
+        mutableStateOf(false)
+    }
 
     val filteredJobsState = remember { mutableStateOf(jobs ?: emptyList()) }
+
+    LaunchedEffect(isBanned) {
+        ban.value = isBanned == true
+    }
+
+    LaunchedEffect(Unit) {
+        savedAccount?.email?.let {
+            try {
+                workerViewModel.getUserDataByEmail(it)
+                workerViewModel.savedEmail(it)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+            }
+        }
+    }
 
     LaunchedEffect(jobs) {
         jobs?.let { updatedJobs ->
@@ -97,57 +117,61 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
                 )
             }
         ) {
-            when (loadingStatus) {
-                is LoadingStatus.Loading -> {
-                    Box(Modifier.fillMaxSize()) {
-                        CircularProgressIndicator(
-                            Modifier
-                                .size(50.dp)
-                                .align(Alignment.Center),
-                            color = Color(0xFF3CF283)
-                        )
-                    }
-                }
-
-                is LoadingStatus.Error -> {
-                    Text(text = "Error")
-                }
-
-                is LoadingStatus.Success -> {
-                    LazyColumn(
-                        Modifier
-                            .background(Color(0xFF272727))
-                            .padding(top = 50.dp, bottom = 66.dp)
-                            .fillMaxSize()
-                    ) {
-                        item {
-                            if (searchState.value) {
-                                SearchBar(
-                                    searchState = searchState,
-                                    onSearchStateChanged = { state -> searchState.value = state },
-                                    jobs = jobs ?: emptyList(),
-                                    onSearchPerformed = { updatedFilteredJobs ->
-                                        updatedFilteredJobs?.let { filteredJobsList ->
-                                            filteredJobsState.value = filteredJobsList
-                                        }
-                                    }
-                                )
-                            } else {
-                                FilteredMenu(
-                                    jobs = jobs ?: emptyList(),
-                                    onSortedPerformed = { updatedSortedJobs ->
-                                        updatedSortedJobs?.let { sortedJobsList ->
-                                            filteredJobsState.value = sortedJobsList
-                                        }
-                                    }
-                                )
-                            }
+            if(!ban.value) {
+                when (loadingStatus) {
+                    is LoadingStatus.Loading -> {
+                        Box(Modifier.fillMaxSize()) {
+                            CircularProgressIndicator(
+                                Modifier
+                                    .size(50.dp)
+                                    .align(Alignment.Center),
+                                color = Color(0xFF3CF283)
+                            )
                         }
-                        items(filteredJobsState.value) { job ->
-                            WorkListItem(item = job, onWorkClick = {
-                                jobViewModel.getJobById(job.jobId)
-                                navController.navigate(Screen.DescriptionScreen.route)
-                            })
+                    }
+
+                    is LoadingStatus.Error -> {
+                        Text(text = "Error")
+                    }
+
+                    is LoadingStatus.Success -> {
+                        LazyColumn(
+                            Modifier
+                                .background(Color(0xFF272727))
+                                .padding(top = 50.dp, bottom = 66.dp)
+                                .fillMaxSize()
+                        ) {
+                            item {
+                                if (searchState.value) {
+                                    SearchBar(
+                                        searchState = searchState,
+                                        onSearchStateChanged = { state ->
+                                            searchState.value = state
+                                        },
+                                        jobs = jobs ?: emptyList(),
+                                        onSearchPerformed = { updatedFilteredJobs ->
+                                            updatedFilteredJobs?.let { filteredJobsList ->
+                                                filteredJobsState.value = filteredJobsList
+                                            }
+                                        }
+                                    )
+                                } else {
+                                    FilteredMenu(
+                                        jobs = jobs ?: emptyList(),
+                                        onSortedPerformed = { updatedSortedJobs ->
+                                            updatedSortedJobs?.let { sortedJobsList ->
+                                                filteredJobsState.value = sortedJobsList
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                            items(filteredJobsState.value) { job ->
+                                WorkListItem(item = job, onWorkClick = {
+                                    jobViewModel.getJobById(job.jobId)
+                                    navController.navigate(Screen.DescriptionScreen.route)
+                                })
+                            }
                         }
                     }
                 }
