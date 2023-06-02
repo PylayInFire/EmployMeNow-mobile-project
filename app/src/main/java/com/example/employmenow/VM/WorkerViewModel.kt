@@ -53,7 +53,8 @@ class WorkerViewModel: ViewModel() {
                 val jwtToken = ApiService.getUserPreference().getString("jwt", "")
                 val repository = WorkerRepository(api)
                 if (jwtToken != null) {
-                    repository.giveFeedback(jwtToken, jobId, workerComment)
+                   val a = repository.giveFeedback(jwtToken, jobId, workerComment)
+                   println(a)
                 }
             } catch (ex: Exception) {
                 ex.printStackTrace()

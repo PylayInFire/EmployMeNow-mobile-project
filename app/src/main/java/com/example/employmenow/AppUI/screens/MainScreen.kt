@@ -2,6 +2,7 @@ package com.example.employmenow.AppUI.screens
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,7 +39,6 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
     val scope = rememberCoroutineScope()
 
     var searchState = remember { mutableStateOf(false) }
-    jobViewModel.getJobs() // Сервер пока что даёт таймаут
     val jobs by jobViewModel.jobs.observeAsState()
     val savedAccount: GoogleSignInAccount? by googleViewModel.googleAccount.observeAsState()
     val loadingStatus: LoadingStatus? by jobViewModel.loadingStatus.observeAsState()
@@ -55,7 +55,9 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
         ban.value = isBanned == true
     }
 
+
     LaunchedEffect(Unit) {
+        jobViewModel.getJobs()
         savedAccount?.email?.let {
             try {
                 workerViewModel.getUserDataByEmail(it)
@@ -175,6 +177,14 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
                         }
                     }
                 }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(text = "You were banned", color = Color.White)
+                }
             }
             if (!permissionGranted.value) {
                 PermissionModal(
@@ -185,3 +195,4 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
         }
     }
 }
+

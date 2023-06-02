@@ -1,3 +1,5 @@
+package com.example.employmenow.VM
+
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -17,20 +19,45 @@ class JobViewModel: ViewModel() {
     private val _loadingStatus = MutableLiveData<LoadingStatus>()
     val loadingStatus: LiveData<LoadingStatus> = _loadingStatus
 
+    private val _favoriteJobIds = MutableLiveData<List<Int>>()
+    val favoriteJobIds: LiveData<List<Int>> = _favoriteJobIds
+
+    private val _selectedJobById = MutableLiveData<JobModel>()
+    val selectedJobById: LiveData<JobModel> = _selectedJobById
+
     fun getJobs() {
         viewModelScope.launch {
             _loadingStatus.value = LoadingStatus.Loading
             val api = ApiService.api
             val repository = JobsRepository(api)
-            val response = repository.getAllJobs()
-            if (response.isSuccessful) {
-                val jobs = response.body()
-                _jobs.value = jobs
+            try {
+                val response = repository.getAllJobs()
+                if (response.isSuccessful) {
+                    val jobs = response.body()
+                    _jobs.value = jobs
+                    _loadingStatus.value = LoadingStatus.Success
+                } else {
+                    _loadingStatus.value = LoadingStatus.Error
+                }
+            } catch (e: Exception) {
+                _loadingStatus.value = LoadingStatus.Error
+            }
+        }
+    }
+
+    fun getJobById(jobId: String) {
+        viewModelScope.launch {
+            _loadingStatus.value = LoadingStatus.Loading
+            val api = ApiService.api
+            val repository = JobsRepository(api)
+            val response = repository.getJobById(jobId)
+            if(response.isSuccessful) {
+                val job = response.body()
+                _selectedJobById.value = job
                 _loadingStatus.value = LoadingStatus.Success
             } else {
                 _loadingStatus.value = LoadingStatus.Error
             }
-                _loadingStatus.value = LoadingStatus.Error
         }
     }
 }
