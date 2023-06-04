@@ -40,10 +40,18 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
 
     var searchState = remember { mutableStateOf(false) }
     val jobs by jobViewModel.jobs.observeAsState()
+    val favoriteJobs by jobViewModel.favoriteJobs.observeAsState()
     val savedAccount: GoogleSignInAccount? by googleViewModel.googleAccount.observeAsState()
     val loadingStatus: LoadingStatus? by jobViewModel.loadingStatus.observeAsState()
     val isBanned by workerViewModel.isBanned.observeAsState()
+    val avatar by workerViewModel.avatar.observeAsState("")
     val permissionGranted = remember { mutableStateOf(true) }
+    val feedbacksCount by workerViewModel.feedbackCount.observeAsState()
+    val acceptedJobs by workerViewModel.acceptedJobs.observeAsState()
+    val declinedJobs by workerViewModel.declinedJobs.observeAsState()
+    var isFavoriteJobs by remember {
+        mutableStateOf(false)
+    }
     val context = LocalContext.current
     val ban = remember {
         mutableStateOf(false)
@@ -55,23 +63,26 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
         ban.value = isBanned == true
     }
 
-
     LaunchedEffect(Unit) {
         jobViewModel.getJobs()
         savedAccount?.email?.let {
             try {
                 workerViewModel.getUserDataByEmail(it)
                 workerViewModel.savedEmail(it)
+                workerViewModel.getFeedbackCounts()
+                workerViewModel.getFeedbackJobs()
             } catch (ex: Exception) {
                 ex.printStackTrace()
             }
         }
     }
 
-    LaunchedEffect(jobs) {
-        jobs?.let { updatedJobs ->
-            filteredJobsState.value = updatedJobs
-        }
+
+    LaunchedEffect(jobs, favoriteJobs, isFavoriteJobs) {
+        val filteredJobs = if (isFavoriteJobs) favoriteJobs ?: emptyList() else jobs ?: emptyList()
+        filteredJobsState.value = filteredJobs
+        jobViewModel.updateFavoriteJobs()
+
     }
 
     fun exitAccount() {
@@ -95,10 +106,11 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
 
     ModalDrawer(
         drawerContent = {
-            savedAccount?.let {
-                SideBar(sideBarScope = scope, scaffoldState = scaffoldState, navUploadCv = {navController.navigate(Screen.UploadCvScreen.route)},
-                    it, { exitAccount() }
-                )
+            savedAccount?.let { it ->
+                    SideBar(sideBarScope = scope, scaffoldState = scaffoldState, navUploadCv = {navController.navigate(Screen.UploadCvScreen.route)}, navProfile = {navController.navigate(Screen.ProfileScreen.route)},
+                        avatar,
+                        it, { exitAccount() },
+                    )
             }
         },
         drawerState = scaffoldState.drawerState
@@ -112,11 +124,15 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
                 })
             },
             bottomBar = {
-                Footer(
-                    searchState = searchState,
-                    isMainScreen = true,
-                    navController = navController
-                )
+                feedbacksCount?.let {
+                    Footer(
+                        searchState = searchState,
+                        isMainScreen = true,
+                        navController = navController,
+                        favoriteJobs = { isFavoriteJobs = !isFavoriteJobs },
+                        feedbacksCount = it
+                    )
+                }
             }
         ) {
             if(!ban.value) {
@@ -150,7 +166,7 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
                                         onSearchStateChanged = { state ->
                                             searchState.value = state
                                         },
-                                        jobs = jobs ?: emptyList(),
+                                        jobs = filteredJobsState.value,
                                         onSearchPerformed = { updatedFilteredJobs ->
                                             updatedFilteredJobs?.let { filteredJobsList ->
                                                 filteredJobsState.value = filteredJobsList
@@ -159,7 +175,7 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
                                     )
                                 } else {
                                     FilteredMenu(
-                                        jobs = jobs ?: emptyList(),
+                                        jobs = filteredJobsState.value,
                                         onSortedPerformed = { updatedSortedJobs ->
                                             updatedSortedJobs?.let { sortedJobsList ->
                                                 filteredJobsState.value = sortedJobsList
@@ -169,9 +185,20 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
                                 }
                             }
                             items(filteredJobsState.value) { job ->
-                                WorkListItem(item = job, onWorkClick = {
+                                val isFavorite = favoriteJobs?.contains(job) == true
+                                WorkListItem(item = job,
+                                    isFavorite = isFavorite,
+                                    onWorkClick = {
                                     jobViewModel.getJobById(job.jobId)
                                     navController.navigate(Screen.DescriptionScreen.route)
+                                    }, onIconClick = {
+                                    if(job.isFavorite) {
+                                        job.isFavorite = false
+                                        workerViewModel.removeFromFavorite(job.jobId)
+                                    } else {
+                                        job.isFavorite = true
+                                        workerViewModel.addToFavorite(job.jobId)
+                                    }
                                 })
                             }
                         }
@@ -195,4 +222,5 @@ fun MainScreen(navController: NavController, googleViewModel: SharedGoogleViewMo
         }
     }
 }
+
 

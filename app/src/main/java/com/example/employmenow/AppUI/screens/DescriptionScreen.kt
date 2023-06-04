@@ -146,7 +146,6 @@ fun MainJobFragment(
                             lineHeight = 30.sp,
                             letterSpacing = 0.4.sp,
                             color = Color.White,
-                            textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -185,6 +184,7 @@ fun MainJobFragment(
                 TextButton(onClick = {
                               if(hasCV) {
                                   workerViewModel.giveFeedback(jobId, feedBackText)
+                                  navController.popBackStack()
                               } else {
                                   navController.navigate(Screen.UploadCvScreen.route) {
                                       popUpTo(Screen.MainScreen.route)

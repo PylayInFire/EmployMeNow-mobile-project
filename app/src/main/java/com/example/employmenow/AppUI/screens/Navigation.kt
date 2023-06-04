@@ -26,9 +26,9 @@ fun Navigation() {
 
         composable(Screen.DescriptionScreen.route) { DescriptionScreen(navController = navController, jobVM,  workersVM) }
 
-        composable(Screen.ResponsesScreen.route) { NotificationScreen(navController = navController) }
+        composable(Screen.ResponsesScreen.route) { NotificationScreen(navController = navController, workersVM) }
 
-        composable(Screen.UploadCvScreen.route) { CvUpload(navController = navController)}
+        composable(Screen.UploadCvScreen.route) { CvUpload(navController = navController, workersVM)}
 
         composable(Screen.ProfileScreen.route) { ProfileScreen(navController = navController, workersVM)}
 

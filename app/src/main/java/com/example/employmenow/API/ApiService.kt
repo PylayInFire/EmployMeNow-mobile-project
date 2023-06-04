@@ -19,7 +19,7 @@ object ApiService {
     }
 
     private val client = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor) // интерцептор для логирования запросов (для теста)
+        .addInterceptor(loggingInterceptor) // Добавьте интерцептор для логирования
         .build()
 
     val api: Api by lazy {

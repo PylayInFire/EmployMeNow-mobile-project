@@ -27,7 +27,9 @@ import com.example.employmenow.R
 fun FilteredMenu(jobs: List<JobModel>, onSortedPerformed: (List<JobModel>?) -> Unit) {
     val options = listOf("A-Z", "Z-A", "Reset")
     var isOpen by remember { mutableStateOf(false); }
+    val originalJobs by remember { mutableStateOf(jobs) }
     val onOptionSelected: (String) -> Unit = { option ->
+
         when (option) {
             "A-Z" -> {
                 val jobsAsc = jobs.sortedBy { it.jobName.trim() }
@@ -38,7 +40,7 @@ fun FilteredMenu(jobs: List<JobModel>, onSortedPerformed: (List<JobModel>?) -> U
                 onSortedPerformed(jobsDesc)
             }
             "Reset" -> {
-                onSortedPerformed(jobs)
+                onSortedPerformed(originalJobs)
             }
         }
         isOpen = false

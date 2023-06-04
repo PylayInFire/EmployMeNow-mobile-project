@@ -25,11 +25,10 @@ import com.example.employmenow.R
 @Composable
 fun Footer(searchState: MutableState<Boolean> = mutableStateOf(false),
            isMainScreen: Boolean = true,
-           navController: NavController) {
+           navController: NavController,
+           favoriteJobs: () -> Unit,
+           feedbacksCount: Int) {
 
-    var countOfMessage by remember {
-        mutableStateOf(0)
-    }
 
     BottomNavigation(
         Modifier.size(428.dp, 56.dp),
@@ -37,7 +36,7 @@ fun Footer(searchState: MutableState<Boolean> = mutableStateOf(false),
     ) {
         BottomNavigationItem(
             selected = true,
-            onClick = {},
+            onClick = { favoriteJobs() },
             icon = { Icon(modifier = Modifier.size(20.dp, 20.dp), painter = painterResource(id = R.drawable.like), contentDescription = "", tint = Color.White) },
             label = { Text(
                 text = "Favorites",
@@ -108,7 +107,7 @@ fun Footer(searchState: MutableState<Boolean> = mutableStateOf(false),
                     BadgedBox(badge = {
                         Badge(Modifier.size(15.dp), containerColor = Color(0xFFF42B1E)) {
                             Text(
-                                text = countOfMessage.toString(),
+                                text = feedbacksCount.toString(),
                                 fontWeight = FontWeight.W500,
                                 fontSize = 10.sp,
                                 lineHeight = 16.sp,

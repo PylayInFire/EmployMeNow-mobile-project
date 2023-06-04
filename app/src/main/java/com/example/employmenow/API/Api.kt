@@ -1,3 +1,7 @@
+package com.example.employmenow.API
+
+import com.example.employmenow.Models.*
+import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*

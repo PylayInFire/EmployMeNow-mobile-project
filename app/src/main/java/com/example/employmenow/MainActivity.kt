@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         setContent {
             EmployMeNowTheme {
-                
+                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
@@ -32,4 +32,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-

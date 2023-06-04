@@ -19,7 +19,7 @@ class FileUploadViewModel: ViewModel() {
     private val _uploadProgress = MutableLiveData<Int>()
     val uploadProgress: LiveData<Int> = _uploadProgress
 
-    fun uploadPdf(uri: Uri, context: Context) {
+    fun uploadFile(uri: Uri, context: Context) {
         viewModelScope.launch {
             val fileName = ContentUtils.getFileName(context, uri)
             val contentType = ContentUtils.getType(context, uri)
@@ -30,7 +30,8 @@ class FileUploadViewModel: ViewModel() {
             val jwtToken = ApiService.getUserPreference().getString("jwt", "")
             val repository = jwtToken?.let { FileUploadRepository(api, it) }
             val part = MultipartBody.Part.createFormData("formFile", fileName, requestBody)
-            repository?.uploadPdf(part)
+            if(contentType == "application/pdf") repository?.uploadPdf(part) else repository?.uploadImg(part)
         }
     }
 }
+

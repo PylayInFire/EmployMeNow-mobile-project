@@ -22,11 +22,14 @@ import com.example.employmenow.Utils.VoiceRecognition
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBar(searchState: MutableState<Boolean>, onSearchStateChanged: (Boolean) -> Unit, jobs: List<JobModel>, onSearchPerformed: (List<JobModel>?) -> Unit) {
+fun SearchBar(searchState: MutableState<Boolean>, onSearchStateChanged: (Boolean) -> Unit, jobs: List<JobModel>, onSearchPerformed: (List<JobModel>) -> Unit) {
     var searchText by remember { mutableStateOf("") }
+    var originalJobs by remember { mutableStateOf(jobs) }
     val startVoiceRecognition = rememberLauncherForActivityResult(VoiceRecognition()) { result ->
         searchText = result
+        Search(searchText, originalJobs, onSearchPerformed)
     }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -43,9 +46,10 @@ fun SearchBar(searchState: MutableState<Boolean>, onSearchStateChanged: (Boolean
         TextField(
             value = searchText,
             modifier = Modifier.width(230.dp),
-            onValueChange = { newValue: String -> searchText = newValue
-                val filteredJobs = jobs.filter { it.jobName.contains(searchText, ignoreCase = true) }
-                onSearchPerformed(filteredJobs)},
+            onValueChange = { newValue: String ->
+                searchText = newValue
+                Search(searchText, originalJobs, onSearchPerformed)
+            },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color(0xFF333333),
                 unfocusedContainerColor = Color(0xFF272727),
@@ -72,9 +76,23 @@ fun SearchBar(searchState: MutableState<Boolean>, onSearchStateChanged: (Boolean
         IconButton(onClick = {
             val searchState = !searchState.value
             onSearchStateChanged(searchState)
-            onSearchPerformed(jobs)
+            if (!searchState) {
+                searchText = ""
+                Search(searchText, originalJobs, onSearchPerformed)
+            }
         }) {
             Icon(modifier = Modifier.size(14.dp, 16.dp), painter = painterResource(id = R.drawable.cross), contentDescription = "close", tint = Color(0xFF979797))
         }
     }
+
 }
+
+fun Search(searchText: String, originalJobs: List<JobModel>, onSearchPerformed: (List<JobModel>) -> Unit) {
+    val filteredJobs = if (searchText.isNotEmpty()) {
+        originalJobs.filter { it.jobName.contains(searchText, ignoreCase = true) }
+    } else {
+        originalJobs
+    }
+    onSearchPerformed(filteredJobs)
+}
+

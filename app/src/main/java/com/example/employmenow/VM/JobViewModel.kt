@@ -19,8 +19,8 @@ class JobViewModel: ViewModel() {
     private val _loadingStatus = MutableLiveData<LoadingStatus>()
     val loadingStatus: LiveData<LoadingStatus> = _loadingStatus
 
-    private val _favoriteJobIds = MutableLiveData<List<Int>>()
-    val favoriteJobIds: LiveData<List<Int>> = _favoriteJobIds
+    private val _favoriteJobs = MutableLiveData<List<JobModel>>()
+    var favoriteJobs: LiveData<List<JobModel>> = _favoriteJobs
 
     private val _selectedJobById = MutableLiveData<JobModel>()
     val selectedJobById: LiveData<JobModel> = _selectedJobById
@@ -29,12 +29,21 @@ class JobViewModel: ViewModel() {
         viewModelScope.launch {
             _loadingStatus.value = LoadingStatus.Loading
             val api = ApiService.api
+            val jwtToken = ApiService.getUserPreference().getString("jwt", "")
             val repository = JobsRepository(api)
             try {
-                val response = repository.getAllJobs()
-                if (response.isSuccessful) {
-                    val jobs = response.body()
-                    _jobs.value = jobs
+                val jobsResponse = repository.getAllJobs()
+                val favoriteJobsResponse = jwtToken?.let { repository.getFavoriteJobs(it) }
+                if (jobsResponse.isSuccessful) {
+                    val jobs = jobsResponse.body()
+                    val favoriteJobs = favoriteJobsResponse?.body()
+
+                    val allJobs = jobs?.map { job ->
+                        val isFavorite = favoriteJobs?.any { favoriteJob -> favoriteJob.jobId == job.jobId } == true
+                        job.copy(isFavorite = isFavorite)
+                    }
+                    _favoriteJobs.value = favoriteJobs
+                    _jobs.value = allJobs
                     _loadingStatus.value = LoadingStatus.Success
                 } else {
                     _loadingStatus.value = LoadingStatus.Error
@@ -59,5 +68,10 @@ class JobViewModel: ViewModel() {
                 _loadingStatus.value = LoadingStatus.Error
             }
         }
+    }
+
+    fun updateFavoriteJobs() {
+        val updatedFavoriteJobs = jobs.value?.filter { it.isFavorite } ?: emptyList()
+        _favoriteJobs.value = updatedFavoriteJobs
     }
 }

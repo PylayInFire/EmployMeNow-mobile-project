@@ -1,19 +1,29 @@
 package com.example.employmenow.AppUI.components
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.decode.DecodeUtils
+import com.example.employmenow.Models.Avatar
 import kotlinx.coroutines.CoroutineScope
 import com.example.employmenow.R
+import com.example.employmenow.Utils.Decoder
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import kotlinx.coroutines.launch
 
@@ -23,15 +33,19 @@ fun SideBar(
     sideBarScope: CoroutineScope,
     scaffoldState: ScaffoldState,
     navUploadCv: () -> Unit,
+    navProfile: () -> Unit,
+    avatar: String?,
     account: GoogleSignInAccount,
     exitAccount: () -> Unit
 ) {
+    val bitmap = avatar?.let { Decoder.decodeToBitmap(it) }
+    val image = bitmap?.asImageBitmap()
     Box(modifier = Modifier
         .width(346.dp)
         .fillMaxHeight()) {
         
         Column(Modifier.fillMaxSize()) {
-            SideBarHeader(account = account)
+            SideBarHeader(account = account, navProfile, image)
             Box(modifier = Modifier.weight(1f)) {
                 SideBarContent(sideBarScope, scaffoldState, navUploadCv)
             }
@@ -42,7 +56,9 @@ fun SideBar(
 
 
 @Composable
-fun SideBarHeader(account: GoogleSignInAccount) {
+fun SideBarHeader(account: GoogleSignInAccount, navProfile: () -> Unit, imageBitmap: ImageBitmap?) {
+    val defaultBitmap: Bitmap = BitmapFactory.decodeResource(LocalContext.current.resources, R.drawable.test_photo)
+    val defaultImageBitmap: ImageBitmap = defaultBitmap.asImageBitmap()
     Row(
         modifier = Modifier
             .height(112.dp)
@@ -57,8 +73,12 @@ fun SideBarHeader(account: GoogleSignInAccount) {
                 .padding(start = 22.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.test_photo),
-                contentDescription = "ff"
+                bitmap = imageBitmap ?: defaultImageBitmap,
+                modifier = Modifier
+                    .size(70.dp, 70.dp)
+                    .clip(CircleShape)
+                    .background(Color.Transparent),
+                contentDescription = "Profile pic"
             )
             Text(
                 modifier = Modifier.padding(top = 7.dp),
@@ -76,10 +96,10 @@ fun SideBarHeader(account: GoogleSignInAccount) {
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.Center
         ) {
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { navProfile() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.edit),
-                    contentDescription = "ddd",
+                    contentDescription = "Profile settings",
                     tint = Color.White
                 )
             }
@@ -137,8 +157,8 @@ fun SideBarFooter(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         
-        IconButton(modifier = Modifier.padding(start = 28.dp),onClick = { /*TODO*/ }) {
-            Icon(painter = painterResource(id = R.drawable.settings), contentDescription = "fd", tint = Color.White)
+        IconButton(modifier = Modifier.padding(start = 28.dp),onClick = {  }) {
+            Icon(painter = painterResource(id = R.drawable.settings), contentDescription = "settings", tint = Color.White)
         }
         
         IconButton(modifier = Modifier.padding(end = 36.dp), onClick = {

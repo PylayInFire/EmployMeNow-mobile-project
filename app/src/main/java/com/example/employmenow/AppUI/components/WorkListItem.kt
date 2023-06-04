@@ -24,8 +24,10 @@ import com.example.employmenow.Models.JobModel
 
 
 @Composable
-fun WorkListItem(item: JobModel, onWorkClick: () -> Unit) {
-    var isPressed by remember { mutableStateOf(false) }
+fun WorkListItem(item: JobModel, isFavorite: Boolean, onWorkClick: () -> Unit, onIconClick: () -> Unit) {
+    var isPressed by remember {
+        mutableStateOf(isFavorite)
+    }
 
     Row(
         Modifier
@@ -156,7 +158,10 @@ fun WorkListItem(item: JobModel, onWorkClick: () -> Unit) {
                 .height(135.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            IconButton(onClick = { isPressed = !isPressed },
+            IconButton(onClick = {
+                onIconClick()
+                isPressed = !isPressed
+            },
             content = {
                 if(isPressed) Icon(painter = painterResource(id = R.drawable.star_full), contentDescription = "", tint = Color.Yellow) else Icon(painter = painterResource(id = R.drawable.star), contentDescription = "", tint = Color.Yellow)
             })

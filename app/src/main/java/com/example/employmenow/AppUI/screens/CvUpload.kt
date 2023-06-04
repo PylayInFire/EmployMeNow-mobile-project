@@ -35,17 +35,18 @@ import com.example.employmenow.AppUI.components.Header
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import com.example.employmenow.R
 import com.example.employmenow.VM.FileUploadViewModel
+import com.example.employmenow.VM.WorkerViewModel
 
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun CvUpload(navController: NavController) {
+fun CvUpload(navController: NavController, workerViewModel: WorkerViewModel) {
     Scaffold(
         topBar = { Header(isMainScreen = false, navController = navController, {})},
         content = {
           CvFragment()
         },
-        bottomBar = { Footer(isMainScreen = false, navController = navController) }
+        bottomBar = { workerViewModel.feedbackCount.value?.let { Footer(isMainScreen = false, navController = navController, favoriteJobs = {}, feedbacksCount = it) } }
     )
 
 }
@@ -57,12 +58,12 @@ fun CvFragment() {
     val progress = fileUploadVM.uploadProgress.observeAsState()
     val pickPdfLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            fileUploadVM.uploadPdf(uri, context)
+            fileUploadVM.uploadFile(uri, context)
         }
     }
     val animatedProgress = animateFloatAsState(
         targetValue = (progress.value?.div(100)?.toFloat()) ?: 0f,
-        animationSpec = tween(durationMillis = 1500)
+        animationSpec = tween(durationMillis = 750)
     )
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
